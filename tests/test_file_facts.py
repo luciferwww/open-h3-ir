@@ -15,8 +15,8 @@ And the declared kind was equally unchecked: an mp4 attached as `kind: image` tr
 vision endpoint and came back as `HTTP 400: Failed to load image: cannot identify image file
 <_io.BytesIO object>`, forwarded to the caller as a 502 with the inference server's internals in it.
 
-The header reader is stdlib only. This package's runtime dependencies are fastapi, uvicorn,
-pydantic, httpx and tiktoken, and one number per image does not earn Pillow.
+The header reader remains stdlib only. Pillow prepares bounded vision previews elsewhere;
+reading one number from the original file does not need to decode its pixels.
 """
 from __future__ import annotations
 

@@ -80,6 +80,12 @@ class LLMConfig:
     # being emitted, looping until the token cap. We validate in Python either way, so the
     # grammar buys nothing we rely on and costs two known failure modes.
     guided_decoding: bool = field(default_factory=lambda: _env_bool("H3IR_GUIDED_DECODING", False))
+    # Analysis copies only. The byte budget is shared across all images in one user turn.
+    # Zero disables that limit; neither setting changes the original conditioning asset.
+    vision_max_edge: int = field(
+        default_factory=lambda: _env_int("H3IR_VISION_MAX_EDGE", 2048))
+    vision_image_budget_bytes: int = field(
+        default_factory=lambda: _env_int("H3IR_VISION_IMAGE_BUDGET_BYTES", 512 * 1024))
 
 
 @dataclass(frozen=True)

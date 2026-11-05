@@ -27,22 +27,24 @@ itself publishes rather than against the one endpoint this was built on. See `he
 from __future__ import annotations
 
 import base64
+import io
 import json
 import logging
-import mimetypes
 import os
 import re
 import struct
 import tempfile
 import time
+import warnings
 import zlib
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
 import httpx
+from PIL import Image, ImageOps
 
-from .config import get_config
+from .config import LLMConfig, get_config
 
 log = logging.getLogger("h3ir.backend")
 
@@ -72,10 +74,18 @@ class EndpointRefused(BackendError):
     a stack of escaped JSON at somebody.
     """
 
-    def __init__(self, status: int, body: str):
+    def __init__(self, status: int, body: str, *, request_bytes: int | None = None):
         self.status = status
         self.body = body
-        super().__init__(f"HTTP {status}: {_server_sentence(body)[:400]}")
+        self.request_bytes = request_bytes
+        message = f"HTTP {status}: {_server_sentence(body)[:400]}"
+        if status == 413 and request_bytes is not None:
+            message += (
+                f" (outgoing JSON: {request_bytes} bytes; the model endpoint or proxy rejected "
+                "the request as too large. For vision requests, lower "
+                "H3IR_VISION_IMAGE_BUDGET_BYTES; otherwise shorten the request or increase "
+                "the endpoint's body limit.)")
+        super().__init__(message)
 
 
 def _server_sentence(body: str) -> str:
@@ -144,31 +154,80 @@ class HealthProbe:
     attempts: tuple[tuple[str, str], ...]
 
 
-def image_data_url(path: str | Path) -> str:
-    """One image as a data URL, declaring the type its BYTES are rather than the type its name says.
-
-    The name is checked second on purpose. An uploaded attachment is stored under its content hash
-    and carries no extension, so guessing from the name returned nothing for every one of them and
-    the fallback below announced each as `image/png` -- a JPEG mislabelled on the way to a vision
-    endpoint, which is exactly the plausible-and-wrong shape this project keeps finding. Sniffed
-    first, so a file with no extension, or the wrong one, is still described truthfully.
-    """
-    from .analyse import image_mime          # imported here: analyse.py imports this module
-
+def image_data_url(path: str | Path, *, max_bytes: int | None = None,
+                   max_edge: int | None = None) -> str:
+    """Bound the analysis copy, not the original asset. Declare the actual encoded MIME type."""
+    cfg = get_config().llm
+    max_bytes = cfg.vision_image_budget_bytes if max_bytes is None else max_bytes
+    max_edge = cfg.vision_max_edge if max_edge is None else max_edge
+    if max_bytes < 0 or max_edge < 0:
+        raise BackendError("vision image limits must be non-negative; zero disables a limit")
     p = Path(path)
-    mime = image_mime(p) or mimetypes.guess_type(p.name)[0] or "image/png"
-    return f"data:{mime};base64,{base64.b64encode(p.read_bytes()).decode()}"
+    try:
+        with warnings.catch_warnings():
+            warnings.simplefilter("error", Image.DecompressionBombWarning)
+            with Image.open(p) as original:
+                size = p.stat().st_size
+                dimensions = original.size
+                resize = bool(max_edge and max(dimensions) > max_edge)
+                if not resize and (not max_bytes or size <= max_bytes):
+                    mime = Image.MIME.get(original.format or "")
+                    if not mime:
+                        raise BackendError(f"unsupported vision image format: {original.format}")
+                    data = p.read_bytes()
+                else:
+                    if max_edge:
+                        original.thumbnail((max_edge, max_edge), Image.Resampling.LANCZOS)
+                    image = ImageOps.exif_transpose(original)
+                    if image.mode in ("RGBA", "LA") or "transparency" in image.info:
+                        rgba = image.convert("RGBA")
+                        image = Image.new("RGB", rgba.size, "white")
+                        image.paste(rgba, mask=rgba.getchannel("A"))
+                    else:
+                        image = image.convert("RGB")
+                    while True:
+                        for quality in (90, 80, 70):
+                            with io.BytesIO() as output:
+                                image.save(output, format="JPEG", quality=quality, optimize=True)
+                                data = output.getvalue()
+                            if not max_bytes or len(data) <= max_bytes:
+                                break
+                        else:
+                            if image.size == (1, 1):
+                                raise BackendError(
+                                    f"vision image budget ({max_bytes} bytes) cannot fit a JPEG")
+                            image = image.resize(
+                                (max(1, image.width * 3 // 4), max(1, image.height * 3 // 4)),
+                                Image.Resampling.LANCZOS)
+                            continue
+                        break
+                    mime = "image/jpeg"
+                    log.warning("vision analysis preview %s: %sx%s, %s bytes -> %sx%s, %s "
+                                "bytes; original asset unchanged", p.name, *dimensions, size,
+                                *image.size, len(data))
+    except (OSError, Image.DecompressionBombError, Image.DecompressionBombWarning) as exc:
+        raise BackendError(f"cannot prepare vision image {p.name}: {exc}") from exc
+    return f"data:{mime};base64,{base64.b64encode(data).decode('ascii')}"
 
 
-def user_message(text: str, images: list[str | Path] | None = None) -> dict[str, Any]:
+def user_message(text: str, images: list[str | Path] | None = None, *,
+                 llm: LLMConfig | None = None) -> dict[str, Any]:
     """Multipart user turn. Verified: this endpoint reads images and can attribute several
     of them correctly within one request."""
     if not images:
         return {"role": "user", "content": text}
+    cfg = llm or get_config().llm
+    budget = cfg.vision_image_budget_bytes
+    if budget < 0 or cfg.vision_max_edge < 0:
+        raise BackendError("vision image limits must be non-negative; zero disables a limit")
+    if budget and budget < len(images):
+        raise BackendError("vision image budget is too small for the number of images")
+    per_image = budget // len(images) if budget else 0
     parts: list[dict[str, Any]] = [{"type": "text", "text": text}]
     for i, img in enumerate(images, 1):
         parts.append({"type": "text", "text": f"Image {i}:"})
-        parts.append({"type": "image_url", "image_url": {"url": image_data_url(img)}})
+        parts.append({"type": "image_url", "image_url": {
+            "url": image_data_url(img, max_bytes=per_image, max_edge=cfg.vision_max_edge)}})
     return {"role": "user", "content": parts}
 
 
@@ -431,7 +490,7 @@ class Backend:
                               headers=self._headers())
         wall = time.time() - t0
         if r.status_code >= 400:
-            raise EndpointRefused(r.status_code, r.text)
+            raise EndpointRefused(r.status_code, r.text, request_bytes=len(r.request.content))
         data = r.json()
         choice = (data.get("choices") or [{}])[0]
         msg = choice.get("message") or {}
@@ -666,7 +725,7 @@ def vision_check(b: Backend) -> tuple[bool, str]:
             fh.write(digits_png(VISION_PROBE_DIGITS))
         reply = b.chat(
             [user_message(f"This picture shows {len(VISION_PROBE_DIGITS)} digits. "
-                          "Reply with only those digits.", [path])],
+                          "Reply with only those digits.", [path], llm=b.cfg)],
             # 256 rather than a tight budget: a captioning model answers a question about a
             # picture with a sentence, and a check that fails on verbosity would be reporting on
             # the model's manners rather than on whether it saw anything. Measured: moondream on

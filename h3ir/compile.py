@@ -17,7 +17,7 @@ import logging
 import re
 import time
 from dataclasses import replace
-from typing import Any
+from typing import Any, Callable
 
 from .analyse import analyse_all, measure_assets
 from .backend import Backend, BackendError
@@ -254,7 +254,8 @@ def compile_brief(brief: Brief, *, backend: Backend | None = None,
                   compose_prompt: str | None = None,
                   prose_prompt: str = "prose_shot.v2.txt",
                   omit: tuple[str, ...] = (),
-                  transcripts: dict[str, str] | None = None) -> IRDocument:
+                  transcripts: dict[str, str] | None = None,
+                  progress: Callable[[str, str], None] | None = None) -> IRDocument:
     cfg = get_config()
     opts = opts or ProfileOptions(name=cfg.profile)
     own_backend = backend is None
@@ -266,7 +267,12 @@ def compile_brief(brief: Brief, *, backend: Backend | None = None,
     if thinking_planning is None:
         thinking_planning = cfg.llm.default_thinking
 
+    def report(stage: str, message: str) -> None:
+        if progress is not None:
+            progress(stage, message)
+
     try:
+        report("request", "Checking request and measuring reference assets")
         # Before the backend and before analysis: a request with more references than the runtime
         # can wire cannot be improved by looking at them, and analysis is the expensive stage.
         check_request(brief)
@@ -275,14 +281,17 @@ def compile_brief(brief: Brief, *, backend: Backend | None = None,
         # (the row cost and the aspect check are computed from them) and a declared kind that does
         # not match the bytes.
         measure_assets(brief.assets)
+        report("connection", "Connecting to the language/vision model")
         backend.require_available()
 
         t = time.time()
+        report("analysis", "Analysing reference assets (cached cards may be reused)")
         cards: dict[str, AssetCard] = analyse_all(
             backend, brief.assets, use_cache=use_cache, seed=seed, transcripts=transcripts)
         timings["analyse_s"] = round(time.time() - t, 2)
 
         t = time.time()
+        report("mode", "Resolving generation mode and reference roles")
         decision = infer_mode(brief, cards, backend)
         mode = decision.mode
         timings["mode_s"] = round(time.time() - t, 2)
@@ -348,6 +357,7 @@ def compile_brief(brief: Brief, *, backend: Backend | None = None,
 
         # --- the product floor: a complete, valid IR with no prose model involved ---------
         t = time.time()
+        report("draft", "Building and validating the deterministic draft")
         draft_plan = deterministic_draft(brief, mode, cards, opts=opts, loras=loras,
                                          mode_decision=decision)
         # Before anything is written or scored: a swap the wiring cannot make unambiguous is a
@@ -371,6 +381,8 @@ def compile_brief(brief: Brief, *, backend: Backend | None = None,
         shot_plan_record: dict[str, Any] = {}
 
         def _document(plan, result, findings, n_tokens, source, reason=None) -> IRDocument:
+            if reason:
+                report("fallback", reason)
             return IRDocument(
                 ir_version=IR_VERSION, profile=opts.name, mode=mode,
                 prompt=result.prompt, plan=plan, sections=result.sections,
@@ -416,6 +428,7 @@ def compile_brief(brief: Brief, *, backend: Backend | None = None,
         # CHECKING it. Every guarantee survives; none of them pre-writes a sentence any more.
         if write_first:
             try:
+                report("writing", "Writing the complete Context-IR")
                 t = time.time()
                 labels = tuple(m.label for m in draft_plan.manifest)
                 imgs = [a.path for a in brief.assets
@@ -455,6 +468,7 @@ def compile_brief(brief: Brief, *, backend: Backend | None = None,
                 from .prose import _definition_lines, fix_with_findings
 
                 def _verify(candidate: str):
+                    report("validation", "Repairing mechanical structure and validating the written IR")
                     fx = repair_brief(candidate, target=draft_plan.target, mode=mode,
                                       labels=labels,
                                       dialogue=tuple(d.text for d in brief.dialogue),
@@ -484,6 +498,7 @@ def compile_brief(brief: Brief, *, backend: Backend | None = None,
                 # boundary: nothing reaches the model that the owner might disagree with.
                 while errors and rounds < MAX_FIX_ROUNDS:
                     rounds += 1
+                    report("correction", f"Correcting validator errors (pass {rounds}/{MAX_FIX_ROUNDS})")
                     before = {f.rule for f in errors}
                     t2 = time.time()
                     # Both namespaces: the media labels come from the wiring and the subject
@@ -562,6 +577,7 @@ def compile_brief(brief: Brief, *, backend: Backend | None = None,
 
         # --- the additive pass: prose enrichment over a bounded surface ------------------
         try:
+            report("planning", "Planning the shot sequence")
             skeleton = build_plan(brief, mode, cards, opts=opts, loras=loras,
                                   mode_decision=decision)
 
@@ -593,6 +609,7 @@ def compile_brief(brief: Brief, *, backend: Backend | None = None,
             log.info("shot plan: %d shot(s) — %s", len(proposal.shots), proposal.reasoning[:120])
 
             t = time.time()
+            report("beats", "Writing the beat sheet and sound plan")
             sheet = beat_sheet(backend, brief, mode, skeleton.subjects, cards,
                                allocate_from_proposal(skeleton.target, proposal.shots, mode, opts),
                                prompt_name=beatsheet_prompt, seed=seed,
@@ -619,6 +636,7 @@ def compile_brief(brief: Brief, *, backend: Backend | None = None,
             anchor_label = (anchor_images[0].label
                             if anchor_images and mode is not Mode.REF2VA else None)
             for shot in plan.shots:
+                report("writing", f"Writing shot {shot.n}/{len(plan.shots)}")
                 imgs = None
                 if shot.n == 1 and anchor_images:
                     paths = [a.path for a in brief.assets
@@ -645,6 +663,7 @@ def compile_brief(brief: Brief, *, backend: Backend | None = None,
             timings["prose_s"] = round(time.time() - t, 2)
 
             _reconcile_scopes(plan)
+            report("validation", "Rendering and validating the enriched IR")
             result, findings, n_tokens = _assess(plan, brief, mode, opts, lora_findings,
                                                  sheet_flags, licence, style,
                                                  audio_transcripts=_audio_transcripts(plan, cards))
@@ -1160,6 +1179,7 @@ def amend_brief(brief: Brief, change: str, backend: Backend) -> tuple[Brief, lis
 
 def refine(brief: Brief, change: str, *, backend: Backend | None = None,
            opts: ProfileOptions | None = None, seed: int | None = None,
+           progress: Callable[[str, str], None] | None = None,
            **kw) -> tuple[IRDocument, Brief, list[str]]:
     """Plain-language refinement. Maps onto the cache keys: a prose-only change re-renders,
     a duration change replans, and the AssetCards are untouched either way."""
@@ -1167,8 +1187,11 @@ def refine(brief: Brief, change: str, *, backend: Backend | None = None,
     own = backend is None
     backend = backend or Backend(cfg)
     try:
+        if progress is not None:
+            progress("refinement", "Interpreting the requested changes")
         amended, changed = amend_brief(brief, change, backend)
-        doc = compile_brief(amended, backend=backend, opts=opts, seed=seed, **kw)
+        doc = compile_brief(amended, backend=backend, opts=opts, seed=seed,
+                            progress=progress, **kw)
         doc.provenance["refined_from"] = brief.hash()
         doc.provenance["refinement"] = change
         doc.provenance["changed_fields"] = changed

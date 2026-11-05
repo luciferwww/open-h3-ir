@@ -166,10 +166,10 @@ def test_the_video_analyser_gets_the_deep_retry_budget():
     from h3ir.analyse import analyse_video
     from h3ir.models import AssetKind, AssetRef
 
-    from types import SimpleNamespace
+    from h3ir.config import LLMConfig
 
     class Recorder:
-        cfg = SimpleNamespace(model="fake-model")
+        cfg = LLMConfig(model="fake-model")
 
         def json_call(self, messages, schema, **kw):
             self.kw = kw

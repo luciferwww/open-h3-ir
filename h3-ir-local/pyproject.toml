@@ -1,0 +1,27 @@
+[build-system]
+requires = ["setuptools>=77"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "h3-ir-local"
+version = "0.1.0"
+description = "Local REST service and single-page workspace for OpenH3-IR"
+requires-python = ">=3.10"
+dependencies = [
+  "open-h3-ir==0.4.1",
+]
+
+[project.optional-dependencies]
+dev = ["pytest"]
+
+[project.scripts]
+h3-ir-local = "h3_ir_local.main:main"
+
+[tool.setuptools]
+packages = ["h3_ir_local"]
+
+[tool.setuptools.package-data]
+h3_ir_local = ["index.html"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

@@ -6,8 +6,8 @@ words with no references, their Ref2VA edit is 238, but their I2VA is 533 words 
 STATIC shot -- because that one had an image to catalogue. That is an asset inventory
 rendered into prose, and it is exactly reproducible locally.
 
-Cached on content hash + analyzer version + model, so swapping one reference re-analyses one
-asset and re-uses everything else.
+Cached on content hash + analyzer version + model + vision limits, so swapping one reference
+re-analyses one asset and re-uses everything else.
 """
 from __future__ import annotations
 
@@ -18,7 +18,7 @@ from pathlib import Path
 from typing import Any
 
 from .backend import Backend, user_message
-from .config import get_config
+from .config import LLMConfig, get_config
 from .models import AssetCard, AssetKind, AssetRef, Role
 
 log = logging.getLogger("h3ir.analyse")
@@ -34,7 +34,8 @@ log = logging.getLogger("h3ir.analyse")
 # 4: `characterisation` split out of an audio card's `summary`. Version 3 audio cards fold the role
 # prefix and the duration into the summary, and the draft appended that whole string to the
 # soundscape -- so reusing one puts asset provenance back into a content section.
-ANALYZER_VERSION = "5"
+# 6: bounded vision previews, including the shared multi-frame byte budget.
+ANALYZER_VERSION = "6"
 
 # Enough to see a change without paying for a filmstrip. Sampled at 10/50/90% rather than at the ends
 # because the first and last frames of a real clip are routinely black or mid-fade.
@@ -155,28 +156,32 @@ def _cache_path(key: str) -> Path:
     return d / f"{key}.json"
 
 
-def _cache_key(ref: AssetRef, model: str) -> str:
+def _cache_key(ref: AssetRef, model: str, llm: LLMConfig | None = None) -> str:
+    cfg = llm or get_config().llm
     return hashlib.sha256(
-        f"{ref.sha256}|{ANALYZER_VERSION}|{model}|{ref.kind.value}".encode()).hexdigest()[:24]
+        f"{ref.sha256}|{ANALYZER_VERSION}|{model}|{ref.kind.value}|"
+        f"{cfg.vision_max_edge}|{cfg.vision_image_budget_bytes}".encode()).hexdigest()[:24]
 
 
-def load_cached(ref: AssetRef, model: str) -> AssetCard | None:
-    p = _cache_path(_cache_key(ref, model))
+def load_cached(ref: AssetRef, model: str, llm: LLMConfig | None = None) -> AssetCard | None:
+    p = _cache_path(_cache_key(ref, model, llm))
     if not p.exists():
         return None
     try:
-        raw = json.loads(p.read_text())
+        raw = json.loads(p.read_text(encoding="utf-8"))
         raw["kind"] = AssetKind(raw["kind"])
         return AssetCard(**raw)
     except Exception:  # noqa: BLE001 - a bad cache entry is not an error, just a miss
         return None
 
 
-def save_cached(ref: AssetRef, card: AssetCard, model: str) -> None:
+def save_cached(ref: AssetRef, card: AssetCard, model: str,
+                llm: LLMConfig | None = None) -> None:
     from dataclasses import asdict
     d = asdict(card)
     d["kind"] = card.kind.value
-    _cache_path(_cache_key(ref, model)).write_text(json.dumps(d, indent=1, ensure_ascii=False))
+    _cache_path(_cache_key(ref, model, llm)).write_text(
+        json.dumps(d, indent=1, ensure_ascii=False), encoding="utf-8")
 
 
 def analyse_image(backend: Backend, ref: AssetRef, *, seed: int | None = None) -> AssetCard:
@@ -193,7 +198,8 @@ def analyse_image(backend: Backend, ref: AssetRef, *, seed: int | None = None) -
 
     obj = backend.json_call(
         [{"role": "system", "content": IMAGE_INSTRUCTIONS},
-         user_message("Catalogue this image." + hint, [ref.path] if ref.path else None)],
+         user_message("Catalogue this image." + hint, [ref.path] if ref.path else None,
+                      llm=backend.cfg)],
         IMAGE_SCHEMA, required=("summary", "subjects"), seed=seed, max_tokens=6000,
         # The same deep budget as analyse_video, for the same reason: vision is this endpoint's
         # flakiest structured caller, and a card that cannot be built kills the whole brief.
@@ -531,7 +537,7 @@ def analyse_video(backend: Backend, ref: AssetRef, frames: list[str] | None = No
           "`summary` sentence, and describe the subject once rather than once per frame."
           + CAMERA_QUESTION},
          user_message("Catalogue this clip." + (f"\n\nCaller's note: {ref.note}" if ref.note else ""),
-                      frames)],
+                      frames, llm=backend.cfg)],
         VIDEO_SCHEMA, required=("summary", "subjects"), seed=seed, max_tokens=6000,
         # Multi-frame vision is this endpoint's flakiest structured call: measured 2026-08-15, the
         # same clip failed the schema-echo check twice and passed on the third attempt, and one
@@ -621,7 +627,7 @@ def analyse_all(backend: Backend, refs: list[AssetRef], *, use_cache: bool = Tru
         # IS derived from the bytes; here it addresses content that contributes nothing to the card.
         cacheable = use_cache and ref.kind is not AssetKind.AUDIO
         if cacheable:
-            hit = load_cached(ref, backend.cfg.model)
+            hit = load_cached(ref, backend.cfg.model, backend.cfg)
             if hit is not None:
                 log.info("card cache hit %s", ref.sha256[:12])
                 out[ref.sha256] = hit
@@ -637,7 +643,7 @@ def analyse_all(backend: Backend, refs: list[AssetRef], *, use_cache: bool = Tru
             raise _name_the_asset(e, ref) from e
         out[ref.sha256] = card
         if cacheable:
-            save_cached(ref, card, backend.cfg.model)
+            save_cached(ref, card, backend.cfg.model, backend.cfg)
     return out
 
 

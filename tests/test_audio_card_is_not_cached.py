@@ -24,14 +24,14 @@ cached, in both directions.
 from __future__ import annotations
 
 from h3ir.analyse import analyse_all, save_cached
+from h3ir.config import LLMConfig
 from h3ir.models import AssetCard, AssetKind, AssetRef, Role
 
 WORDS = "We close at six, not half past."
 
 
 class _Backend:
-    class cfg:
-        model = "test-model"
+    cfg = LLMConfig(model="test-model")
 
 
 def _wav(note: str, role: Role = Role.VOICE_TIMBRE) -> AssetRef:

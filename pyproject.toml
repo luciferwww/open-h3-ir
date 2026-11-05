@@ -31,6 +31,7 @@ dependencies = [
   "pydantic",
   "httpx",
   "tiktoken",
+  "pillow>=10",
 ]
 
 [project.optional-dependencies]

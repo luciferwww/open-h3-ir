@@ -1,0 +1,483 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <title>H3-IR Local · 本地创作工作台</title>
+  <style>
+    :root{font:14px/1.6 system-ui,-apple-system,"Segoe UI","Microsoft YaHei",sans-serif;color:#203238;background:#f2f5f4;--accent:#176c5a;--line:#dde5e1;--muted:#6b7c77}
+    *{box-sizing:border-box}body{margin:0}button,input,textarea,select{font:inherit}button{cursor:pointer;border:1px solid var(--line);border-radius:8px;background:white;color:inherit;padding:8px 13px}button:hover{border-color:var(--accent);color:var(--accent)}button:disabled{opacity:.5;cursor:not-allowed}button.primary{background:var(--accent);border-color:var(--accent);color:white}button.small{font-size:12px;padding:4px 9px}a{color:var(--accent)}h1,h2,h3,p{margin:0}h1{font-size:21px;letter-spacing:-.7px}h2{font-size:17px}h3{font-size:14px}small,.muted{color:var(--muted);font-size:12px}label{display:block;font-size:12px;font-weight:600;margin-bottom:5px}input,textarea,select{width:100%;border:1px solid #d5dfd9;border-radius:7px;background:#fff;color:inherit;padding:9px 10px;outline:none}input:focus,textarea:focus,select:focus{border-color:var(--accent);box-shadow:0 0 0 2px #176c5a12}textarea{resize:vertical;min-height:84px}input[type=checkbox]{width:auto;margin-right:6px}fieldset{border:0;padding:0;margin:0;min-width:0}pre{white-space:pre-wrap;overflow-wrap:anywhere;line-height:1.75;font:12px/1.75 ui-monospace,Consolas,monospace;margin:0}summary{cursor:pointer;color:var(--muted);font-size:13px}details[open]>summary{margin-bottom:14px}[v-cloak]{display:none}
+    .topbar{background:#fff;border-bottom:1px solid var(--line);padding:17px 30px;display:flex;align-items:center;justify-content:space-between;gap:15px}.brand{display:flex;align-items:center;gap:13px}.mark{background:var(--accent);color:white;font-weight:800;border-radius:10px;width:42px;height:42px;display:grid;place-items:center;letter-spacing:-1px}.pill{display:inline-flex;align-items:center;gap:6px;border-radius:20px;padding:4px 10px;background:#e8f2ed;color:var(--accent);font-size:12px}.shell{display:grid;grid-template-columns:278px minmax(0,1fr);gap:22px;max-width:1450px;margin:24px auto;padding:0 26px}.sidebar{display:flex;flex-direction:column;gap:18px}.card{background:white;border:1px solid var(--line);border-radius:12px;padding:21px;box-shadow:0 2px 6px #17382c03}.stack{display:flex;flex-direction:column;gap:16px}.row{display:flex;align-items:center;gap:10px;flex-wrap:wrap}.between{justify-content:space-between}.grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:13px}.two{grid-template-columns:repeat(2,minmax(0,1fr))}.spaced{margin-top:16px}.section-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:17px;gap:12px}.eyebrow{font-size:10px;color:var(--accent);letter-spacing:2px;text-transform:uppercase;font-weight:700;margin-bottom:4px}.intro{margin-bottom:18px}.intro h2{font-size:25px;font-weight:650;letter-spacing:-.8px;margin-bottom:5px}.intro p{color:var(--muted)}.dropzone{border:1px dashed #bbd0c3;border-radius:9px;padding:19px;text-align:center;background:#f7faf8;cursor:pointer}.dropzone input{margin-top:10px;border:0;background:transparent;font-size:12px}.asset{border:1px solid var(--line);border-radius:9px;padding:14px;margin-top:12px}.asset-name{font-weight:600;overflow-wrap:anywhere;font-size:13px}.asset img,.asset video{max-width:100%;max-height:150px;border-radius:6px;margin-top:10px}.asset audio{max-width:100%;width:100%;height:34px;margin-top:10px}.history{max-height:430px;overflow:auto;display:flex;flex-direction:column;gap:5px}.history button{border:0;background:transparent;text-align:left;width:100%;padding:10px;border-radius:7px}.history button.selected{background:#edf5ef}.history .title{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:200px}.history .meta{font-size:11px;color:var(--muted)}.banner{padding:12px 15px;border-radius:8px;white-space:pre-wrap;overflow-wrap:anywhere;background:#fff2e4;color:#855322;border:1px solid #f1d9b8}.banner.error{background:#fff0ee;color:#a33f35;border-color:#efcfca}.banner.info{background:#eef5f1;color:#356851;border-color:#cfdfd5}.banner small{color:inherit}.tabs{display:flex;gap:5px;border-bottom:1px solid var(--line);margin:15px 0}.tabs button{border:0;border-bottom:2px solid transparent;border-radius:0;background:transparent;color:var(--muted)}.tabs button.active{border-bottom-color:var(--accent);color:var(--accent)}.output{background:#f7f9f8;border-radius:8px;padding:18px;max-height:650px;overflow:auto}.finding{padding:10px 0;border-bottom:1px solid var(--line);font-size:12px}.finding strong{margin-right:8px}.hint{background:#f4f7f5;border-radius:7px;padding:10px 12px;color:var(--muted);font-size:12px}.dialogue{border-top:1px solid var(--line);padding-top:13px;margin-top:13px}.empty{text-align:center;padding:35px 20px;color:var(--muted)}.busy-dot{width:7px;height:7px;border-radius:50%;background:#7bac94;animation:pulse 1.3s infinite}.footer-note{font-size:11px;color:var(--muted);padding:0 3px}.toast{position:fixed;right:24px;bottom:24px;background:#203d30;color:white;padding:11px 20px;border-radius:9px;z-index:5;max-width:85vw}.loading{max-width:650px;margin:100px auto;padding:25px}.tag{font-size:11px;color:var(--muted);background:#f0f3f1;border-radius:4px;padding:2px 6px}.actions{padding-top:17px;border-top:1px solid var(--line);margin-top:18px}.break{overflow-wrap:anywhere}.subtext{font-size:12px;color:var(--muted);margin-top:4px}
+    .history-item{display:flex;align-items:center;gap:4px;min-width:0}.history .history-open{flex:1;min-width:0;width:auto}.history .history-delete{flex:0 0 auto;width:auto;padding:5px 7px;font-size:12px;color:#a33f35}
+    @keyframes pulse{50%{opacity:.3}}@media(max-width:1000px){.shell{grid-template-columns:235px minmax(0,1fr);padding:0 15px;gap:15px}.grid{grid-template-columns:repeat(2,minmax(0,1fr))}.card{padding:16px}}@media(max-width:720px){.shell{display:flex;flex-direction:column;margin-top:16px}.sidebar{order:2}.grid,.two{grid-template-columns:1fr}.topbar{padding:14px 18px}.topbar .tag{display:none}.intro h2{font-size:22px}.history{max-height:240px}.history .title{max-width:none}}
+  </style>
+</head>
+<body>
+<div id="boot" class="loading">正在加载 H3-IR Local…<p class="muted">界面使用固定版本 Vue 3 CDN，需要联网加载；编译服务在本机运行。</p></div>
+<div id="app" v-cloak>
+  <header class="topbar">
+    <div class="brand"><div class="mark">H3</div><div><h1>H3-IR Local</h1><p class="muted">本地创作工作台 / Context-IR</p></div></div>
+    <div class="row"><span class="tag">编译核心 {{ coreVersion || '…' }}</span><span class="pill"><span v-if="busy" class="busy-dot"></span>{{ busy ? '任务进行中' : '本地服务' }}</span></div>
+  </header>
+  <div class="shell">
+    <aside class="sidebar">
+      <section class="card">
+        <div class="section-head"><h3>模型连接</h3><span class="tag">OpenAI 兼容</span></div>
+        <fieldset :disabled="busy || saving">
+          <div class="stack">
+            <div><label for="endpoint">API 地址（含 /v1）</label><input id="endpoint" v-model="settings.base_url" placeholder="模型服务的 API 基地址"></div>
+            <div><label for="model">模型名称</label><input id="model" v-model="settings.model" placeholder="单模型端点可留空"></div>
+            <div><label for="key">API Key · 仅当前会话</label><input id="key" type="password" v-model="keyInput" autocomplete="new-password" :placeholder="settings.has_api_key ? '已设置，留空保留' : '可选，不保存到磁盘'"><button v-if="settings.has_api_key" class="small spaced" @click="clearKey">清除密钥</button></div>
+            <div><label for="timeout">单次模型调用超时（秒）</label><input id="timeout" type="number" min="5" max="3600" v-model.number="settings.timeout_s"></div>
+            <div class="row"><button class="primary" @click="saveSettings">保存连接</button><button @click="testConnection" :disabled="probing">{{ probing ? '检查中…' : '测试连接' }}</button></div>
+          </div>
+        </fieldset>
+        <p class="subtext spaced">图片需要视觉模型。测试连接不等于验证视觉能力。模型可在本机或远程运行，本机无需 CUDA。</p>
+      </section>
+      <section class="card">
+        <div class="section-head"><h3>最近创作</h3><button class="small" @click="refreshHistory">刷新</button></div>
+        <p v-if="capabilities.history_limit" class="subtext">保留最近 {{ capabilities.history_limit }} 条记录；排队或运行中的任务不会清理。</p>
+        <div v-if="!history.length" class="muted">尚无记录。结果和请求会保存在本机。</div>
+        <div class="history">
+          <div v-for="item in history" :key="item.id" class="history-item">
+            <button class="history-open" :class="{selected: selected?.id === item.id}" @click="loadJob(item.id)" :disabled="!!loadingJob || uploading"><span class="title">{{ item.change || item.intent }}</span><span class="meta">{{ statusLabel(item.status) }} · v{{ item.version }} · {{ date(item.created_at) }}</span></button>
+            <button class="history-delete" @click="deleteJob(item)" :disabled="!!deleting || !!loadingJob || ['queued','running'].includes(item.status)" :aria-label="'删除创作：'+(item.change || item.intent)" :title="['queued','running'].includes(item.status) ? '正在编译的任务不能删除' : '仅删除这条记录，不删除其他版本或素材'">{{ deleting === item.id ? '删除中…' : '删除' }}</button>
+          </div>
+        </div>
+      </section>
+      <p class="footer-note">这里只编译提示词，不渲染视频。<br>音频不会被自动转录；视频只分析三个采样帧。<br>素材可能发送至你配置的模型端点。</p>
+    </aside>
+    <main class="stack">
+      <div class="intro"><div class="eyebrow">From idea to direction</div><h2>把想法，整理成可执行的镜头。</h2><p>描述你想要的画面，交给经过校验的 H3 编译核心。</p></div>
+      <div v-if="error" role="alert" class="banner error"><div class="row between"><strong>操作未完成</strong><button class="small" @click="error=''">关闭</button></div>{{ error }}</div>
+      <section class="card">
+        <div class="section-head"><h2>01 / 创作需求</h2><div class="row"><button v-if="selected" class="small" @click="reuseJob" :disabled="busy || uploading || !!loadingJob">还原参数</button><button class="small" @click="resetForm" :disabled="busy || uploading || !!loadingJob">新建</button></div></div>
+        <p v-if="loadingJob" class="subtext" role="status">正在载入创作参数与附件…</p>
+        <fieldset :disabled="busy || uploading || !!loadingJob || !loaded">
+          <label for="intent">你想拍什么？</label><textarea id="intent" v-model="form.intent" rows="4" placeholder="例如：她走上雨中的高架平台，看到远处的城市后停下。不要对白。"></textarea>
+          <div class="grid spaced">
+            <div><label for="seconds">请求时长（秒）</label><input id="seconds" v-model.number="form.seconds" type="number" step="0.1" min="0.1"><small>最终时长将对齐到 H3 帧网格。</small></div>
+            <div><label for="aspect">画幅</label><select id="aspect" v-model="form.aspect"><option v-for="value in contract.limits?.aspects" :key="value">{{ value }}</option></select></div>
+            <div><label for="creativity">创意许可</label><select id="creativity" v-model="form.creativity"><option v-for="value in contract.limits?.creativity" :key="value" :value="value">{{ creativityNames[value] || value }}</option></select><small>明确的禁止要求优先于所有档位。</small></div>
+          </div>
+          <details class="spaced"><summary>导演、台词与高级参数</summary>
+            <div class="grid">
+              <div><label for="director">导演风格</label><select id="director" v-model="form.director"><option value="">不指定</option><option v-for="d in contract.directors" :key="d.id" :value="d.id">{{ d.name }}</option><option value="custom">自定义</option></select></div>
+              <div><label for="shots">固定镜头数（留空自动）</label><input id="shots" type="number" min="1" :max="contract.limits?.max_pinned_shots" v-model="form.shots"></div>
+              <div><label for="seed">随机种子</label><input id="seed" type="number" step="1" v-model="form.seed" placeholder="留空随机"></div>
+              <div><label for="megapixels">画面像素面积（MP，可选）</label><input id="megapixels" type="number" min=".25" max="2.5" step=".05" v-model="form.megapixels" placeholder="留空使用原生几何尺寸"></div>
+              <div><label for="effort">处理档位</label><select id="effort" v-model="form.effort"><option v-for="v in contract.limits?.effort" :key="v">{{ v }}</option></select></div>
+              <div class="row"><label><input type="checkbox" v-model="form.silent">完全静音</label></div>
+            </div>
+            <div v-if="form.director === 'custom'" class="spaced"><label for="directorName">风格名称（用于记录）</label><input id="directorName" v-model="form.directorName"><label for="directorNotes" class="spaced">风格描述</label><textarea id="directorNotes" v-model="form.directorNotes" :maxlength="contract.limits?.director_notes_max_chars" placeholder="描述光线、色彩、构图、运镜和声音习惯，而不是指定电影名称。"></textarea></div>
+            <p v-else-if="directorNotes" class="hint spaced">{{ directorNotes }}</p>
+            <div class="grid two spaced"><div><label for="constraints">额外约束（每行一条）</label><textarea id="constraints" v-model="form.constraints" placeholder="不要字幕&#10;保持相机固定"></textarea></div><div><label for="screenText">必须保留的画面文字（每行一项）</label><textarea id="screenText" v-model="form.onscreen_text"></textarea></div></div>
+            <div class="section-head spaced"><h3>锁定台词 · 原样保留</h3><button class="small" @click="addDialogue">添加台词</button></div>
+            <div v-for="(line, i) in form.dialogue" :key="line.id" class="dialogue">
+              <div class="grid"><div><label>语言</label><input v-model="line.language" list="languages"></div><div><label>说话人提示（可选）</label><input v-model="line.speaker"></div><div class="row"><label><input type="checkbox" v-model="line.voiceover">画外音</label><button class="small" @click="form.dialogue.splice(i,1)">移除</button></div></div>
+              <textarea class="spaced" v-model="line.text" placeholder="原样保留的台词，包括标点。"></textarea>
+            </div>
+            <datalist id="languages"><option v-for="v in contract.limits?.dialogue_languages" :key="v" :value="v"></option></datalist>
+          </details>
+        </fieldset>
+      </section>
+      <section class="card">
+        <div class="section-head"><h2>02 / 参考素材</h2><span class="muted">{{ assets.length }} 份附件</span></div>
+        <fieldset :disabled="busy || uploading || !!loadingJob || !loaded">
+          <div class="dropzone"><strong>选择图片、视频或音频</strong><p class="muted">文件上传至本地服务，按内容去重。每份上限 {{ size(capabilities.assets?.upload_max_bytes || 0) }}。</p><input aria-label="选择参考素材" type="file" multiple accept="image/*,video/*,audio/*" @change="chooseFiles"></div>
+          <p class="hint spaced">每张卡片的角色与参考说明只绑定该附件。附件编号是当前列表顺序，不是最终 slot，也不是可在需求中引用的标签；正式标签与 slot 由编译器分配，完成后在“素材接线”中查看。</p>
+          <div v-for="(asset,i) in assets" :key="asset.id" class="asset">
+            <div class="row between"><div class="asset-name"><span class="pill">附件 {{ i+1 }}</span> {{ asset.name }} <span class="tag">{{ asset.missing ? '历史原文件缺失' : asset.sha256 ? '已上传' : '待上传' }}</span></div><button class="small" @click="removeAsset(i)" :aria-label="'移除附件 '+(i+1)+'：'+asset.name">移除</button></div>
+            <small>{{ asset.size == null ? '大小未知' : size(asset.size) }} · {{ asset.kind }}{{ asset.originalName === false ? ' · 旧记录未保存原文件名' : '' }}</small>
+            <p v-if="asset.missing" class="banner error spaced">此历史附件已缺失，无法预览或直接复用，请重新选择原文件。</p>
+            <p v-if="!asset.file && asset.preview" class="subtext"><a :href="asset.preview+'?download=true'" download>下载原文件</a></p>
+            <div v-if="assetSlots(selected,asset).length" class="row spaced"><span class="muted">所选结果中的本文件：</span><span v-for="entry in assetSlots(selected,asset)" :key="entry.slot" class="tag">{{ entry.label }} · slot {{ entry.slot }} · {{ roleNames[entry.role] || entry.role }}</span></div>
+            <img v-if="asset.preview && asset.kind==='image'" :src="asset.preview" :alt="'附件 '+(i+1)+'：'+asset.name">
+            <video v-if="asset.preview && asset.kind==='video'" :src="asset.preview" controls preload="metadata"></video>
+            <audio v-if="asset.preview && asset.kind==='audio'" :src="asset.preview" controls preload="metadata"></audio>
+            <div class="grid spaced">
+              <div><label>素材类型</label><select v-model="asset.kind" @change="asset.role='';asset.pairedId=''"><option value="image">图片</option><option value="video">视频</option><option value="audio">音频</option></select></div>
+              <div><label :for="'asset-role-'+asset.id">附件 {{ i+1 }} 的素材角色</label><select :id="'asset-role-'+asset.id" v-model="asset.role"><option value="">让编译器推断</option><option v-for="role in contract.roles?.[asset.kind]" :key="role" :value="role">{{ roleNames[role] || role }}</option></select></div>
+              <div v-if="asset.kind==='image'"><label>参考分辨率</label><select v-model="asset.sizing"><option value="match">匹配输出（较低成本）</option><option value="max">高分辨率（更高成本）</option></select></div>
+              <div v-if="asset.kind==='audio'"><label>作为哪段视频的配对音轨？</label><select v-model="asset.pairedId"><option value="">独立音频</option><option v-for="video in videoAssets" :key="video.id" :value="video.id">{{ video.name }}</option></select></div>
+            </div>
+            <label class="spaced" :for="'asset-note-'+asset.id">附件 {{ i+1 }} 的参考说明{{ asset.kind === 'audio' ? '（请说明音色、节奏、配器等事实）' : '（只作用于本附件）' }}</label><textarea :id="'asset-note-'+asset.id" v-model="asset.note" rows="2" placeholder="描述当前卡片中的素材，无需重复文件名或猜测 slot。"></textarea>
+            <div v-if="asset.role==='replacement_subject'" class="spaced"><label>替换原视频中的谁？</label><input v-model="asset.replaces" placeholder="例如：穿格子衬衫的男子"></div>
+            <div v-if="asset.kind==='audio'" class="spaced"><label>实际转录（可选，不会自动识别）</label><textarea v-model="asset.transcript" placeholder="仅填写音频中真实说出的文字。"></textarea></div>
+          </div>
+          <div class="actions row between"><span class="muted">模式与素材标签由编译器决定。</span><button class="primary" @click="submit" :disabled="!form.intent.trim()">{{ uploading ? uploadMessage : '编译 Context-IR →' }}</button></div>
+        </fieldset>
+        <p v-if="uploading" class="subtext spaced" role="status">{{ uploadMessage }}</p>
+        <p v-if="busy" class="subtext spaced" role="status">任务通过 SSE 实时回传阶段；可保留页面等待，或稍后从历史记录查看。</p>
+      </section>
+      <section class="card">
+        <div class="section-head"><h2>03 / 编译结果</h2><span v-if="selected" class="tag">{{ statusLabel(selected.status) }} · v{{ selected.version }}</span></div>
+        <div v-if="!selected" class="empty">你的下一份镜头方案，从上面的一个想法开始。</div>
+        <template v-else>
+          <p class="break">{{ selected.change ? '本次修改：' + selected.change : selected.request.intent }}</p>
+          <div v-if="selected.progress?.length" class="hint spaced" role="status">
+            <div class="row between"><strong>{{ stageLabel(selected.progress.at(-1).stage) }}</strong><span>已用时 {{ elapsed }} 秒</span></div>
+            <p class="subtext">{{ selected.progress.at(-1).message }}</p>
+            <p v-if="streamState" class="subtext">{{ streamState }}</p>
+            <details class="spaced"><summary>查看实际执行阶段（不代表完成百分比）</summary>
+              <div v-for="(step,i) in selected.progress" :key="i" class="row between"><span>{{ stageLabel(step.stage) }}</span><small>{{ step.elapsed_s }} 秒</small></div>
+            </details>
+          </div>
+          <div v-if="selected.error" class="banner error spaced">{{ describeError(selected.error) }}</div>
+          <template v-if="selected.result">
+            <div v-if="selected.result.fallback_reason" class="banner spaced"><strong>当前交付：确定性草稿</strong><br>{{ selected.result.fallback_reason }}</div>
+            <div v-if="selected.result.question" class="banner info spaced"><strong>编译器请求澄清</strong><pre>{{ pretty(selected.result.question) }}</pre><div class="row spaced"><button @click="answerClarification('opening_frame')" :disabled="busy || uploading || !!loadingJob">用作开场帧</button><button @click="answerClarification('appears_in')" :disabled="busy || uploading || !!loadingJob">作为新场景中的参考</button></div><small>当前结果已应用默认值，可直接使用。</small></div>
+            <div class="row spaced"><span class="pill">{{ selected.result.ir.target.effective_seconds }} 秒 · {{ selected.result.ir.target.frames }} 帧</span><span class="tag">{{ selected.result.ir.target.canvas.join(' × ') }}</span><span class="tag">{{ selected.result.ir.prompt_tokens }} tokens</span><span class="tag">来源：{{ selected.result.source }}</span></div>
+            <div class="tabs"><button v-for="v in tabs" :key="v.id" :class="{active:tab===v.id}" @click="tab=v.id">{{ v.name }}</button></div>
+            <div class="row spaced" style="margin-bottom:12px"><button class="small" @click="copyPrompt">复制提示词</button><button class="small" @click="download('txt')">下载提示词</button><button class="small" @click="download('json')">下载完整结果</button></div>
+            <div class="output" v-if="tab==='prompt'"><pre>{{ selected.result.ir.prompt }}</pre></div>
+            <div v-if="tab==='summary'" class="stack">
+              <div class="hint"><h3>{{ selected.result.presentation.headline }}</h3><p v-if="selected.result.presentation.notice" class="spaced">{{ selected.result.presentation.notice }}</p></div>
+              <div><label>原始需求</label><p class="break">{{ selected.result.plan.asked_for }}</p></div>
+              <details><summary>核心辅助计划（不代表最终分镜，交付以提示词为准）</summary>
+                <p class="hint">write-first 路径中的辅助计划可能来自确定性草稿，不应把这里的镜头数当作最终提示词的镜头数。</p>
+                <p class="spaced"><strong>风格：</strong>{{ selected.result.plan.style }}</p>
+                <div v-for="shot in selected.result.plan.shots" :key="shot.n" class="asset"><h3>计划镜头 {{ shot.n }} · {{ shot.from }}–{{ shot.to }} 秒</h3><p>{{ shot.what_happens }}</p><p class="subtext">{{ shot.camera }}</p><p v-for="(line,i) in shot.says" :key="i">{{ line }}</p></div>
+                <p class="spaced"><strong>环境声音：</strong>{{ selected.result.plan.background_sound.join(' ') }}</p><p><strong>配乐：</strong>{{ selected.result.plan.music }}</p>
+              </details>
+            </div>
+            <div v-if="tab==='wiring'">
+              <p class="hint">以下标签与 slot 直接读取本次结果，不按上传顺序推测。slot 从 0 开始，Picture / Video / Audio 标签分别从 1 开始；原文件按 SHA-256 和素材类型匹配，同一文件用于多个位置时会列出全部对应关系。</p>
+              <div v-for="entry in selected.result.ir.manifest" :key="entry.slot" class="asset">
+                <div class="row"><strong>{{ entry.label }}</strong><span class="tag">slot {{ entry.slot }}</span><span class="pill">{{ roleNames[entry.role] || entry.role }}</span></div>
+                <p v-for="file in manifestFiles(selected,entry)" :key="file.index" class="asset-name spaced">附件 {{ file.index+1 }} · {{ file.name }}</p>
+                <p v-if="!manifestFiles(selected,entry).length" class="banner spaced">此结果条目没有匹配的附件记录，请核对原始素材接线 JSON。</p>
+                <p class="subtext break">接线：{{ entry.wiring }} · SHA-256：{{ entry.sha256 }}</p>
+              </div>
+              <p v-if="!selected.result.ir.manifest.length" class="muted spaced">本次没有素材接线。</p>
+              <details class="spaced"><summary>原始素材接线 JSON</summary><pre class="output spaced">{{ pretty(selected.result.ir.manifest) }}</pre></details>
+            </div>
+            <div v-if="tab==='findings'"><p v-if="!selected.result.ir.diagnostics.length" class="muted">没有校验提示。</p><div v-for="(f,i) in selected.result.ir.diagnostics" :key="i" class="finding"><strong>{{ f.severity }} · {{ f.rule }}</strong>{{ f.message }}</div></div>
+            <div class="output" v-if="tab==='json'"><pre>{{ pretty(selected.result) }}</pre></div>
+            <div class="actions"><label for="change">继续修改（生成新版本，保留原结果）</label><div class="row"><input id="change" v-model="change" placeholder="例如：整体更暗一些，最后一段放慢。" style="flex:1;min-width:150px" :disabled="busy || uploading || !!loadingJob"><button class="primary" @click="refine" :disabled="busy || uploading || !!loadingJob || !change.trim()">应用修改</button></div></div>
+          </template>
+        </template>
+      </section>
+    </main>
+  </div>
+  <div v-if="toast" class="toast" role="status">{{ toast }}</div>
+</div>
+<script src="__VUE_URL__"></script>
+<script>
+function blankForm() {
+  return {intent:'', seconds:5, aspect:'16:9', creativity:'balanced', shots:'', seed:7,
+    megapixels:'', effort:'standard', silent:false, director:'', directorName:'', directorNotes:'',
+    constraints:'', onscreen_text:'', dialogue:[]};
+}
+function makePayload(form, assets, base={}) {
+  const lines = value => value.split(/\r?\n/).filter(line => line.trim());
+  const payload = {
+    ...base,
+    intent:form.intent, seconds:Number(form.seconds), aspect:form.aspect, creativity:form.creativity,
+    effort:form.effort, silent:form.silent, seed:form.seed === '' ? null : Number(form.seed),
+    constraints:lines(form.constraints), onscreen_text:lines(form.onscreen_text),
+    dialogue:form.dialogue.map(d => ({text:d.text, language:d.language, speaker:d.speaker || null, voiceover:d.voiceover})),
+    assets:[], transcripts:{...base.transcripts},
+    asset_names:assets.map(asset=>asset.originalName===false ? null : asset.name || asset.sha256)
+  };
+  if (!payload.intent.trim()) throw new Error('请填写创作需求。');
+  if (!Number.isFinite(payload.seconds) || payload.seconds <= 0) throw new Error('时长必须是正数。');
+  if (payload.seed !== null && !Number.isSafeInteger(payload.seed)) throw new Error('种子必须是安全整数。');
+  delete payload.shots;
+  delete payload.megapixels;
+  if (form.shots !== '') {
+    payload.shots = Number(form.shots);
+    if (!Number.isSafeInteger(payload.shots) || payload.shots < 1) throw new Error('镜头数必须是正整数。');
+  }
+  if (form.megapixels !== '') {
+    payload.megapixels = Number(form.megapixels);
+    if (!Number.isFinite(payload.megapixels) || payload.megapixels < .25 || payload.megapixels > 2.5) throw new Error('像素面积范围为 0.25–2.5 MP。');
+  }
+  if (form.director === 'custom') {
+    payload.director='';payload.director_profile={name:form.directorName,notes:form.directorNotes};
+  } else {payload.director=form.director;payload.director_profile=null;}
+  for (const asset of assets) {
+    if (!asset.sha256) throw new Error('素材尚未上传：' + asset.name);
+    const item = {...asset.input,sha256:asset.sha256, kind:asset.kind, sizing:asset.sizing, note:asset.note};
+    delete item.role;delete item.replaces;delete item.paired_video_sha256;
+    if (asset.role) item.role = asset.role;
+    if (asset.role === 'replacement_subject') item.replaces = asset.replaces;
+    if (asset.kind === 'audio' && asset.pairedId) {
+      const video = assets.find(v => v.id === asset.pairedId && v.kind === 'video');
+      if (!video?.sha256) throw new Error('配对视频已移除，请重新选择音轨配对。');
+      item.paired_video_sha256 = video.sha256;
+    }
+    if (asset.kind === 'audio') {
+      delete payload.transcripts[asset.sha256];
+      if(asset.transcript)payload.transcripts[asset.sha256]=asset.transcript;
+    }
+    payload.assets.push(item);
+  }
+  return payload;
+}
+function describeError(value) {
+  if (typeof value === 'string') return value;
+  const detail = value?.detail || value;
+  return detail?.message ? (detail.code ? detail.code + ': ' : '') + detail.message
+    + (detail.findings ? '\n' + JSON.stringify(detail.findings, null, 2) : '') : JSON.stringify(detail, null, 2);
+}
+window.H3Local = {makePayload, blankForm, describeError};
+function subscribeJob(id, {onJob, onState, onDone}, EventSourceType=window.EventSource) {
+  const source = new EventSourceType('/api/jobs/'+encodeURIComponent(id)+'/events');
+  source.onopen = () => onState('实时连接已建立');
+  source.onerror = () => onState('实时连接中断，正在自动重连；任务仍在服务端运行。');
+  source.addEventListener('job', event => {
+    try {
+      const job = JSON.parse(event.data);
+      onJob(job);
+      if (!['queued','running'].includes(job.status)) {
+        source.close();
+        onState('');
+        onDone(job);
+      }
+    } catch (error) {
+      source.close();
+      onState('无法读取实时进度：'+error.message+'。请刷新历史记录查看结果。');
+    }
+  });
+  return source;
+}
+window.H3Local.subscribeJob = subscribeJob;
+if (!window.Vue) {
+  document.getElementById('boot').textContent = 'Vue 加载失败。请检查 CDN 网络连接后刷新；本地 REST 服务仍可通过 /docs 使用。';
+} else {
+  const {createApp, ref, reactive, computed, onMounted, onUnmounted} = Vue;
+  createApp({
+    setup() {
+      const loaded=ref(false), busy=ref(false), saving=ref(false), probing=ref(false), uploading=ref(false);
+      const deleting=ref(''), loadingJob=ref('');
+      const error=ref(''), toast=ref(''), uploadMessage=ref(''), coreVersion=ref(''), keyInput=ref('');
+      const settings=reactive({base_url:'', model:'', timeout_s:600, has_api_key:false});
+      const contract=ref({}), capabilities=ref({}), history=ref([]), assets=ref([]), selected=ref(null);
+      const form=reactive(blankForm()), change=ref(''), tab=ref('prompt');
+      const baseRequest=ref({});
+      const editorSnapshot=()=>JSON.stringify({form,assets:assets.value,base:baseRequest.value});
+      let cleanEditor=editorSnapshot();
+      const rememberEditor=()=>{cleanEditor=editorSnapshot();};
+      const confirmDiscard=()=>(
+        (editorSnapshot()===cleanEditor && !change.value.trim()) ||
+        window.confirm('当前有尚未提交的编辑或修改指令。此操作会覆盖上方表单，是否继续？')
+      );
+      const streamState=ref(''), now=ref(Date.now());
+      const elapsed=computed(()=>{
+        const job=selected.value, last=job?.progress?.at(-1);
+        if(!last)return 0;
+        const live=['queued','running'].includes(job.status);
+        return Math.max(0,Math.floor(last.elapsed_s+(live ? (now.value-new Date(last.at).getTime())/1000 : 0)));
+      });
+      const tabs=[{id:'prompt',name:'提示词'},{id:'summary',name:'创作说明'},{id:'wiring',name:'素材接线'},{id:'findings',name:'校验提示'},{id:'json',name:'完整 JSON'}];
+      const creativityNames={restrained:'克制 · 不添加内容',balanced:'均衡 · 可补充配乐',bold:'大胆 · 可补充对白与文字',extreme:'极致 · 更强的创作倾向'};
+      const roleNames={frame_anchor_first:'首帧锚点',frame_anchor_last:'尾帧锚点',subject:'主体参考',environment:'环境参考',style:'风格参考',storyboard:'分镜参考',structure:'镜头结构参考',edit_source:'待编辑原视频',continuation_source:'待续写原视频',placed_subject:'加入新主体',replacement_subject:'替换原主体',voice_timbre:'音色参考',bgm:'直接使用的背景音乐',music_style:'音乐风格参考',beat_reference:'节奏参考',sfx:'音效参考'};
+      const videoAssets=computed(()=>assets.value.filter(a=>a.kind==='video'));
+      const directorNotes=computed(()=>contract.value.directors?.find(d=>d.id===form.director)?.notes || '');
+      let timer, toastTimer, stream, streamId;
+      const pretty=value=>JSON.stringify(value,null,2);
+      const date=value=>new Date(value).toLocaleString('zh-CN',{month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'});
+      const size=value=>value>=1024*1024 ? (value/1024/1024).toFixed(1)+' MiB' : (value/1024).toFixed(1)+' KiB';
+      const assetUrl=(id,index)=>'/api/jobs/'+encodeURIComponent(id)+'/assets/'+index;
+      const assetSlots=(job,asset)=>(job?.result?.ir?.manifest || []).filter(entry=>entry.sha256===asset.sha256 && entry.kind===asset.kind);
+      const manifestFiles=(job,entry)=>(job?.attachments || []).filter(asset=>asset.sha256===entry.sha256 && asset.kind===entry.kind);
+      const statusLabel=value=>({queued:'等待中',running:'编译中',completed:'已完成',failed:'失败',interrupted:'已中断'}[value] || value);
+      const stageLabel=value=>({queued:'等待编译',starting:'启动编译器',preparing:'准备需求与附件',compiling:'编译中（此核心版本不提供详细阶段）',request:'检查需求与素材信息',connection:'连接模型服务',analysis:'分析参考素材（可能使用缓存）',mode:'确定生成模式与素材角色',draft:'构建并校验确定性草稿',writing:'撰写 Context-IR',validation:'结构修复与校验',correction:'按校验错误修正文稿',planning:'规划镜头',beats:'编写节拍与声音计划',fallback:'回退到有效草稿',result:'整理最终结果',refinement:'理解自然语言修改',completed:'编译完成',failed:'编译失败',interrupted:'任务已中断'}[value] || value);
+      function notify(message) { toast.value=message; clearTimeout(toastTimer); toastTimer=setTimeout(()=>toast.value='',4000); }
+      async function api(path, options={}) {
+        const headers={'X-H3-Local':'1',...(options.body && typeof options.body==='string' ? {'Content-Type':'application/json'} : {}),...options.headers};
+        const response=await fetch(path,{...options,headers});
+        if (!(response.headers.get('content-type') || '').includes('application/json')) throw new Error('服务未返回 JSON，请检查服务终端。HTTP '+response.status);
+        const body=await response.json();
+        if (!response.ok) throw new Error(describeError(body));
+        return body;
+      }
+      async function guarded(fn) { error.value=''; try { return await fn(); } catch(e) { error.value=e.message || String(e); } }
+      async function refreshHistory() {
+        return guarded(async()=>{
+          history.value=await api('/api/jobs');
+          const active=history.value.find(j=>['queued','running'].includes(j.status));
+          busy.value=!!active;
+          if(active)watchJob(active.id);
+        });
+      }
+      function watchJob(id) {
+        if(stream && streamId===id)return;
+        if(stream)stream.close();
+        streamId=id;streamState.value='正在建立实时连接…';
+        stream=subscribeJob(id,{
+          onJob:job=>{
+            if(job.status==='deleted')removeHistoryJob(job.id);
+            else {
+              if(selected.value?.id===job.id)selected.value=job;
+              const entry=history.value.find(item=>item.id===job.id);
+              if(entry)entry.status=job.status;
+            }
+            busy.value=['queued','running'].includes(job.status);
+            now.value=Date.now();
+          },
+          onState:message=>{streamState.value=message;},
+          onDone:()=>{stream=null;streamId=null;refreshHistory();}
+        });
+      }
+      async function loadJob(id) {
+        if(loadingJob.value || uploading.value || !confirmDiscard())return;
+        return guarded(async()=>{
+          loadingJob.value=id;
+          try {
+            const job=await api('/api/jobs/'+encodeURIComponent(id));
+            restoreJobInputs(job);
+            selected.value=job;tab.value='prompt';
+            if(['queued','running'].includes(job.status))watchJob(id);
+          } finally {loadingJob.value='';}
+        });
+      }
+      function removeHistoryJob(id) {
+        history.value=history.value.filter(item=>item.id!==id);
+        for(const asset of assets.value) {
+          if(!asset.file && asset.preview?.startsWith('/api/jobs/'+encodeURIComponent(id)+'/assets/')) {
+            asset.preview='';asset.missing=true;
+          }
+        }
+        if(selected.value?.id===id) {selected.value=null;change.value='';tab.value='prompt';}
+        if(streamId===id) {stream.close();stream=null;streamId=null;streamState.value='';}
+      }
+      async function deleteJob(item) {
+        if(deleting.value)return;
+        if(['queued','running'].includes(item.status)) {
+          error.value='正在编译或等待中的任务不能删除，请等待任务结束。';return;
+        }
+        if(!window.confirm('确定永久删除这条创作记录、结果及其附件？\n\n'+(item.change || item.intent)+'\n\n仅删除此版本及其独立附件，不影响其他版本。此操作无法撤销。'))return;
+        return guarded(async()=>{
+          deleting.value=item.id;
+          try {
+            await api('/api/jobs/'+encodeURIComponent(item.id),{method:'DELETE'});
+            removeHistoryJob(item.id);
+            notify('创作记录已删除。');
+            await refreshHistory();
+          } finally {deleting.value='';}
+        });
+      }
+      async function saveSettings() {
+        return guarded(async()=>{
+          saving.value=true;
+          try {Object.assign(settings,await api('/api/settings',{method:'PUT',body:JSON.stringify({...settings,api_key:keyInput.value || null,busy:undefined,has_api_key:undefined})}));keyInput.value='';notify('连接配置已保存，密钥仅保留在服务内存中。');}
+          finally {saving.value=false;}
+        });
+      }
+      async function clearKey() {
+        return guarded(async()=>{Object.assign(settings,await api('/api/settings',{method:'PUT',body:JSON.stringify({base_url:settings.base_url,model:settings.model,timeout_s:settings.timeout_s,api_key:''})}));keyInput.value='';notify('会话密钥已清除。');});
+      }
+      async function testConnection() {
+        return guarded(async()=>{probing.value=true;try {const result=await api('/api/probe',{method:'POST'});notify(result.message);}finally{probing.value=false;}});
+      }
+      function chooseFiles(event) {
+        error.value='';
+        for (const file of event.target.files) {
+          if (file.size > capabilities.value.assets.upload_max_bytes) {error.value='文件超出上限：'+file.name;continue;}
+          const kind=file.type.startsWith('video/')?'video':file.type.startsWith('audio/')?'audio':'image';
+          assets.value.push({id:crypto.randomUUID(),file,name:file.name,size:file.size,kind,role:'',sizing:'match',note:'',replaces:'',pairedId:'',transcript:'',sha256:'',preview:URL.createObjectURL(file)});
+        }
+        event.target.value='';
+      }
+      function removeAsset(i) {
+        const removed=assets.value.splice(i,1)[0];
+        if(removed.preview?.startsWith('blob:')) URL.revokeObjectURL(removed.preview);
+        for(const a of assets.value) if(a.pairedId===removed.id) a.pairedId='';
+      }
+      function resetForm() {
+        if(loadingJob.value || uploading.value || !confirmDiscard())return;
+        while(assets.value.length)removeAsset(0);
+        Object.assign(form,blankForm());baseRequest.value={};selected.value=null;change.value='';
+        rememberEditor();
+      }
+      function addDialogue() {form.dialogue.push({id:crypto.randomUUID(),text:'',language:'Chinese',speaker:'',voiceover:false});}
+      async function uploadAssets() {
+        for (let i=0;i<assets.value.length;i++) {
+          const asset=assets.value[i];
+          if(!asset.file) continue;
+          uploadMessage.value='正在处理 '+(i+1)+'/'+assets.value.length+'：'+asset.name;
+          if(!asset.sha256) {
+            const hash=await crypto.subtle.digest('SHA-256',await asset.file.arrayBuffer());
+            asset.sha256=Array.from(new Uint8Array(hash),v=>v.toString(16).padStart(2,'0')).join('');
+          }
+          await api('/api/assets/'+asset.sha256,{method:'PUT',body:asset.file,headers:{'Content-Type':'application/octet-stream'}});
+        }
+      }
+      async function submit() {
+        return guarded(async()=>{
+          uploading.value=true;
+          try {
+            await uploadAssets();const body=makePayload(form,assets.value,baseRequest.value);
+            if(assets.value.some(asset=>!asset.file))body.source_job_id=selected.value?.id;
+            selected.value=await api('/api/jobs',{method:'POST',body:JSON.stringify(body)});
+            for(const [index,asset] of assets.value.entries()) {
+              if(!asset.file && selected.value.attachments?.[index]?.available)asset.preview=assetUrl(selected.value.id,index);
+            }
+            rememberEditor();
+            busy.value=true;tab.value='prompt';watchJob(selected.value.id);await refreshHistory();
+          }
+          finally{uploading.value=false;uploadMessage.value='';}
+        });
+      }
+      async function refine() {
+        return guarded(async()=>{selected.value=await api('/api/jobs/'+selected.value.id+'/refinements',{method:'POST',body:JSON.stringify({change:change.value})});change.value='';busy.value=true;watchJob(selected.value.id);await refreshHistory();});
+      }
+      function reuseJob() {
+        if(loadingJob.value || uploading.value || !confirmDiscard())return;
+        restoreJobInputs(selected.value);
+      }
+      function restoreJobInputs(job) {
+        const request=JSON.parse(JSON.stringify(job.request));
+        const restoredForm={...blankForm(),...request,shots:request.shots ?? '',megapixels:request.megapixels ?? '',seed:request.seed ?? '',
+          constraints:request.constraints.join('\n'),onscreen_text:request.onscreen_text.join('\n'),
+          director:request.director_profile ? 'custom' : request.director,
+          directorName:request.director_profile?.name || '',directorNotes:request.director_profile?.notes || '',
+          dialogue:request.dialogue.map(d=>({...d,id:crypto.randomUUID(),speaker:d.speaker || ''}))};
+        const imported=request.assets.map((a,index)=>{
+          const saved=job.attachments?.[index];
+          return {...a,input:{...a},id:crypto.randomUUID(),name:saved?.name || a.sha256,originalName:saved?.original_name ?? false,
+            size:saved?.bytes ?? null,missing:!saved?.available,preview:saved?.available ? assetUrl(job.id,index) : '',
+            file:null,role:a.role || '',replaces:a.replaces || '',pairedId:'',
+            transcript:request.transcripts[a.sha256] || ''};
+        });
+        for(const asset of imported) if(asset.paired_video_sha256) asset.pairedId=imported.find(v=>v.sha256===asset.paired_video_sha256 && v.kind==='video')?.id || '';
+        while(assets.value.length)removeAsset(0);
+        baseRequest.value=request;Object.assign(form,restoredForm);assets.value=imported;change.value='';
+        rememberEditor();
+        notify('已载入本版本输入及归档附件；模型连接仍使用当前设置。缺失的旧附件需要重新选择文件。');
+      }
+      async function answerClarification(answer) {
+        return guarded(async()=>{const request={...selected.value.request,asset_names:(selected.value.attachments || []).map(a=>a.original_name ? a.name : null),answer:{anchor_or_reference:answer}};selected.value=await api('/api/jobs',{method:'POST',body:JSON.stringify(request)});busy.value=true;watchJob(selected.value.id);await refreshHistory();});
+      }
+      async function copyPrompt() {return guarded(async()=>{await navigator.clipboard.writeText(selected.value.result.ir.prompt);notify('提示词已复制。');});}
+      function download(kind) {
+        const result=selected.value.result;
+        const blob=new Blob([kind==='txt'?result.ir.prompt:pretty(result)],{type:kind==='txt'?'text/plain;charset=utf-8':'application/json;charset=utf-8'});
+        const url=URL.createObjectURL(blob), a=document.createElement('a');
+        a.href=url;a.download='h3-ir-'+selected.value.id+'.'+(kind==='txt'?'txt':'json');document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);
+      }
+      onMounted(async()=>{
+        document.getElementById('boot').remove();
+        await guarded(async()=>{
+          const data=await api('/api/bootstrap');
+          contract.value=data.contract;capabilities.value=data.capabilities;Object.assign(settings,data.settings);
+          coreVersion.value=data.contract.package_version;
+          const health=await api('/api/health');
+          if(!health.ffmpeg || !health.ffprobe) notify('未检测到 FFmpeg/ffprobe，视频素材分析暂不可用。');
+          await refreshHistory();
+          if(history.value.length) await loadJob(history.value[0].id);
+          loaded.value=true;
+        });
+        timer=setInterval(()=>{now.value=Date.now();},1000);
+      });
+      onUnmounted(()=>{clearInterval(timer);clearTimeout(toastTimer);if(stream)stream.close();for(const a of assets.value)if(a.preview)URL.revokeObjectURL(a.preview);});
+      return {loaded,busy,saving,probing,uploading,deleting,loadingJob,error,toast,uploadMessage,coreVersion,keyInput,settings,contract,capabilities,history,assets,selected,form,baseRequest,change,tab,tabs,creativityNames,roleNames,videoAssets,directorNotes,pretty,date,size,assetUrl,assetSlots,manifestFiles,statusLabel,stageLabel,elapsed,streamState,describeError,refreshHistory,loadJob,deleteJob,saveSettings,clearKey,testConnection,chooseFiles,removeAsset,resetForm,addDialogue,submit,refine,reuseJob,answerClarification,copyPrompt,download};
+    }
+  }).mount('#app');
+}
+</script>
+</body>
+</html>
